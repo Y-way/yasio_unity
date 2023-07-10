@@ -77,13 +77,16 @@ YASIO_NI_API void yasio_init_globals(void(YASIO_INTEROP_DECL* pfn)(int level, co
   io_service::init_globals(custom_print);
 }
 YASIO_NI_API void yasio_cleanup_globals() { io_service::cleanup_globals(); }
-YASIO_NI_API void* yasio_create_service(int channel_count, void(YASIO_INTEROP_DECL* event_cb)(int kind, int status, int cidx, void* t, void* opaque))
+YASIO_NI_API void* yasio_create_service(int channel_count,
+                                        void(YASIO_INTEROP_DECL* event_cb)(int kind, int status, int cidx, void* t, void* opaque, void* service_ptr))
 {
   assert(!!event_cb);
   io_service* service = new io_service(channel_count);
   service->start([=](event_ptr e) {
-    auto& pkt = e->packet();
-    event_cb(e->kind(), e->status(), e->cindex(), e->transport(), !is_packet_empty(pkt) ? &pkt : nullptr);
+    auto& pkt                    = e->packet();
+    transport_handle_t transport = e->transport();
+    io_service* service_ptr      = &transport->get_context()->get_service();
+    event_cb(e->kind(), e->status(), e->cindex(), transport, !is_packet_empty(pkt) ? &pkt : nullptr, service_ptr);
   });
   return service;
 }

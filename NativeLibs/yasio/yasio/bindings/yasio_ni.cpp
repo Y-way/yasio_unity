@@ -84,9 +84,7 @@ YASIO_NI_API void* yasio_create_service(int channel_count,
   io_service* service = new io_service(channel_count);
   service->start([=](event_ptr e) {
     auto& pkt                    = e->packet();
-    transport_handle_t transport = e->transport();
-    io_service* service_ptr      = &transport->get_context()->get_service();
-    event_cb(e->kind(), e->status(), e->cindex(), transport, !is_packet_empty(pkt) ? &pkt : nullptr, service_ptr);
+    event_cb(e->kind(), e->status(), e->cindex(), e->transport(), !is_packet_empty(pkt) ? &pkt : nullptr, service);
   });
   return service;
 }
